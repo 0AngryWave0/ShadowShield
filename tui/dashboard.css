@@ -1,0 +1,21 @@
+#title {
+    background: darkblue;
+    color: white;
+    text-align: center;
+    padding: 1;
+    height: 3;
+}
+
+#alerts {
+    border: round #4444ff;
+    width: 70%;
+    height: 100%;
+}
+
+#side-info {
+    padding: 2;
+    width: 30%;
+    border: round red;
+    color: green;
+    height: 100%;
+}

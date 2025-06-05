@@ -1,0 +1,3 @@
+watchdog
+textual
+rich

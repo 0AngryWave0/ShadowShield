@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.log
+
+# Virtual env
+venv/
+
+# OS files
+.DS_Store
+
+# Local data
+blocked.json
+
+# VSCode (if you're using it)
+.vscode/
