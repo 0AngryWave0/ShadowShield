@@ -10,6 +10,7 @@ from rich.table import Table
 from core.monitor import read_eve, process_alerts, monitor_loop
 from core.state import blocked_ips
 from core.blocker import ensure_iptables_rule, unblock_ip, restore_blocked_ips
+from tui.cowrie_logs import CowrieLogViewer
 from core.services import (
     start_suricata,
     stop_suricata,
@@ -108,6 +109,7 @@ def main():
     subparsers.add_parser("disable-drop", help="Disable iptables DROP rule for blocked IPs")
     subparsers.add_parser("start-honeypot", help="Start Honeypot service")
     subparsers.add_parser("stop-honeypot", help="Stop Honeypot service")
+    subparsers.add_parser("honeypot-logs", help="View honeypot logs")
 
 
     args = parser.parse_args()
@@ -149,6 +151,8 @@ def main():
         start_cowrie()
     elif args.command == "stop-honeypot":
         stop_cowrie()
+    elif args.command == "honeypot-logs":
+        CowrieLogViewer().run()
     else:
         parser.print_help()
         sys.exit(1)
