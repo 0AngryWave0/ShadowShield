@@ -19,7 +19,10 @@ from core.services import (
     is_portspoof_running,
     enable_drop_rule,
     disable_drop_rule,
-    is_drop_rule_enabled
+    is_drop_rule_enabled,
+    start_cowrie,
+    stop_cowrie,
+    is_cowrie_running
 )
 from tui.dashboard import ShadowShield
 
@@ -82,7 +85,7 @@ def show_service_status():
     status_table.add_row("Suricata", "🟢 Running" if is_suricata_running() else "🔴 Stopped")
     status_table.add_row("Portspoof", "🟢 Running" if is_portspoof_running() else "🔴 Stopped")
     status_table.add_row("DROP Rule", "🟢 Enabled" if is_drop_rule_enabled() else "🔴 Disabled")
-
+    status_table.add_row("HoneyPot", "🟢 Enabled" if is_cowrie_running() else "🔴 Disabled")
     console.print(status_table)
 
 def main():
@@ -103,6 +106,8 @@ def main():
     subparsers.add_parser("stop-portspoof", help="Stop Portspoof service")
     subparsers.add_parser("enable-drop", help="Enable iptables DROP rule for blocked IPs")
     subparsers.add_parser("disable-drop", help="Disable iptables DROP rule for blocked IPs")
+    subparsers.add_parser("start-honeypot", help="Start Honeypot service")
+    subparsers.add_parser("stop-honeypot", help="Stop Honeypot service")
 
 
     args = parser.parse_args()
@@ -140,6 +145,10 @@ def main():
         enable_drop_rule()
     elif args.command == "disable-drop":
         disable_drop_rule()
+    elif args.command == "start-honeypot":
+        start_cowrie()
+    elif args.command == "stop-honeypot":
+        stop_cowrie()
     else:
         parser.print_help()
         sys.exit(1)
