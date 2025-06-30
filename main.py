@@ -94,7 +94,6 @@ def main():
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("monitor", help="Run Suricata monitor loop")
-    subparsers.add_parser("dashboard", help="Run terminal dashboard")
     subparsers.add_parser("show-alerts", help="Show latest Suricata alerts")
     subparsers.add_parser("blocked", help="Show blocked IPs")
 
@@ -127,8 +126,6 @@ def main():
         ensure_iptables_rule()
         restore_blocked_ips()
         monitor_loop()
-    elif args.command == "dashboard":
-        launch_dashboard()
     elif args.command == "show-alerts":
         show_alerts()
     elif args.command == "blocked":

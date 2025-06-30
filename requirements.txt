@@ -1,3 +1,4 @@
 watchdog
 textual
 rich
+psutil

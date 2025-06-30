@@ -9,10 +9,10 @@ def run_cmd(cmd):
 # Suricata Service
 # --------------------------
 def start_suricata():
-    return run_cmd("sudo systemctl start suricata")
+    return run_cmd("systemctl start suricata")
 
 def stop_suricata():
-    return run_cmd("sudo systemctl stop suricata")
+    return run_cmd("systemctl stop suricata")
 
 def is_suricata_running():
     _, out, _ = run_cmd("systemctl is-active suricata")
@@ -22,10 +22,10 @@ def is_suricata_running():
 # Portspoof Service
 # --------------------------
 def start_portspoof():
-    return run_cmd("sudo systemctl start portspoof")
+    return run_cmd("systemctl start portspoof")
 
 def stop_portspoof():
-    return run_cmd("sudo systemctl stop portspoof")
+    return run_cmd("systemctl stop portspoof")
 
 def is_portspoof_running():
     _, out, _ = run_cmd("systemctl is-active portspoof")
@@ -35,13 +35,13 @@ def is_portspoof_running():
 # DROP Rule (iptables)
 # --------------------------
 def enable_drop_rule():
-    return run_cmd("sudo iptables -C INPUT -m set --match-set blocked_ips src -j DROP || sudo iptables -I INPUT -m set --match-set blocked_ips src -j DROP")
+    return run_cmd("iptables -C INPUT -m set --match-set blocked_ips src -j DROP || iptables -I INPUT -m set --match-set blocked_ips src -j DROP")
 
 def disable_drop_rule():
-    return run_cmd("sudo iptables -D INPUT -m set --match-set blocked_ips src -j DROP")
+    return run_cmd("iptables -D INPUT -m set --match-set blocked_ips src -j DROP")
 
 def is_drop_rule_enabled():
-    code, out, _ = run_cmd("sudo iptables -L INPUT -n")
+    code, out, _ = run_cmd("iptables -L INPUT -n")
     return "match-set blocked_ips src" in out
 
 # --------------------------
@@ -53,20 +53,20 @@ def cowrie_cmd(cmd):
 
 def start_cowrie():
     return subprocess.run([
-        "sudo", "-u", USER, "bash", "-c",
+        "bash", "-c",
         f"source {COWRIE_ENV} && {COWRIE_CMD} start"
     ])
 
 def stop_cowrie():
     return subprocess.run([
-        "sudo", "-u", USER, "bash", "-c",
+        "bash", "-c",
         f"source {COWRIE_ENV} && {COWRIE_CMD} stop"
     ])
 
 
 def is_cowrie_running():
     result = subprocess.run([
-        "sudo", "-u", USER, "bash", "-c",
+        "bash", "-c",
         f"source {COWRIE_ENV} && {COWRIE_CMD} status"
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
