@@ -16,15 +16,15 @@ def stop_suricata():
     return run_cmd("pkill -f 'suricata.*yaml'")
 
 def is_suricata_running():
-    code, out, _ = run_cmd("pgrep -f 'suricata.*yaml'")
-    return code == 0
+    code, out, _ = run_cmd("pidof suricata")
+    return code == 0 and bool(out.strip())
 
 
 # --------------------------
 # Portspoof
 # --------------------------
 def start_portspoof():
-    return run_cmd("portspoof -c /opt/portspoof/portspoof.conf -s /opt/portspoof/services")
+    return run_cmd("portspoof -c /opt/portspoof/portspoof.conf -s /opt/portspoof/services -p 4444")
 
 def stop_portspoof():
     return run_cmd("pkill portspoof")

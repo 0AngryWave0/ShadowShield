@@ -2,7 +2,9 @@
 
 # Activate virtualenv
 source /opt/shadowshield/.venv/bin/activate
-
+#Clear iptables rules
+iptables -F
+iptables -t nat -F
 # Ensure log files exist
 mkdir -p logs rules
 touch logs/cowrie.log
