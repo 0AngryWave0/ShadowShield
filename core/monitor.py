@@ -35,7 +35,8 @@ def process_alerts():
             if keyword in sig and is_valid_ip(dst_ip):
                 block_ip(dst_ip)
 
-        if ("Nmap" in sig or "Scan" in sig) and src_ip not in seen_ips:
+        print(f"[DEBUG] Signature: {sig}")
+        if any(kw in sig.lower() for kw in ["nmap", "scan"]) and src_ip not in seen_ips:
             print(f"[!] Spoofing {src_ip} for scan: {sig}")
             spoof_ip(src_ip)
             seen_ips.add(src_ip)

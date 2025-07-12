@@ -1,7 +1,7 @@
 import subprocess
 from core.config import IPSET_LIST_NAME
 from core.state import add_blocked_ip, is_ip_blocked, get_local_ips, remove_blocked_ip, load_blocked_ips
-from core.spoofing import remove_spoof
+from core.spoofing import remove_spoof, spoof_ip
 
 # Initialize
 blocked_ips = load_blocked_ips()
@@ -45,12 +45,4 @@ def restore_blocked_ips():
         if result.returncode != 0:
             subprocess.run(f"ipset add {IPSET_LIST_NAME} {ip}", shell=True)
 
-
-def ensure_iptables_rule():
-    rule = f"iptables -t nat -C PREROUTING -m set --match-set {IPSET_LIST_NAME} src -p tcp -j REDIRECT --to-port 4444 || " \
-           f"iptables -t nat -A PREROUTING -m set --match-set {IPSET_LIST_NAME} src -p tcp -j REDIRECT --to-port 4444"
-    result = subprocess.run(rule, shell=True)
-    if result.returncode == 0:
-        print("[+] iptables NAT redirection rule verified or inserted.")
-    else:
-        print("[!] Failed to apply NAT redirection rule. You might need sudo.")
+        spoof_ip(ip)

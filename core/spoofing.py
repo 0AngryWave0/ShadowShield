@@ -1,44 +1,53 @@
 import subprocess
 
-def rule_exists(rule_snippet: str) -> bool:
-    """
-    Check if a rule snippet exists in the current iptables configuration.
-    Note: Only works with a clear, identifiable string.
-    """
-    check = subprocess.run(f"iptables-save | grep -- \"{rule_snippet}\"", shell=True, stdout=subprocess.DEVNULL)
-    return check.returncode == 0
+def iptables_rule_exists(table: str, chain: str, match: str) -> bool:
+    cmd = f"iptables -t {table} -S {chain}"
+    result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    rules = result.stdout.decode().splitlines()
+    return any(match in rule for rule in rules)
 
 def spoof_ip(ip: str, portspoof_port: int = 4444):
     """
-    Redirect all TCP traffic from this IP to Portspoof.
+    Redirect all TCP traffic from this IP to Portspoof via PREROUTING.
     """
-    rules = [
-        (
+    prerouting_rule = f"-A PREROUTING -s {ip} -p tcp --dport 1:65535 -j REDIRECT --to-port {portspoof_port}"
+    
+    if not iptables_rule_exists("nat", "PREROUTING", prerouting_rule):
+        subprocess.run(
             f"iptables -t nat -A PREROUTING -s {ip} -p tcp --dport 1:65535 -j REDIRECT --to-port {portspoof_port}",
-            f"-A PREROUTING -s {ip} -p tcp -m tcp --dport 1:65535 -j REDIRECT --to-ports {portspoof_port}"
-        ),
-        (
-            f"iptables -A INPUT -p tcp --dport {portspoof_port} -j ACCEPT",
-            f"-A INPUT -p tcp -m tcp --dport {portspoof_port} -j ACCEPT"
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
         )
-    ]
+        print(f"[+] Spoofing rule inserted for {ip}")
+    else:
+        print(f"[=] Spoofing rule already exists for {ip}")
 
-    for full_cmd, grep_snippet in rules:
-        if not rule_exists(grep_snippet):
-            subprocess.run(full_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    print(f"[+] Spoofing activated for IP: {ip} (-> {portspoof_port})")
+    print(f"[✓] Spoofing active for IP: {ip} → Port {portspoof_port}")
 
 
 def remove_spoof(ip: str, portspoof_port: int = 4444):
     """
-    Remove Portspoof redirect rules for the given IP.
+    Remove Portspoof redirect rule from PREROUTING for the given IP.
     """
-    rules = [
-        f"iptables -t nat -D PREROUTING -s {ip} -p tcp --dport 1:65535 -j REDIRECT --to-port {portspoof_port}",
-        f"iptables -D INPUT -p tcp --dport {portspoof_port} -j ACCEPT"
-    ]
-    for rule in rules:
-        subprocess.run(rule, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    rule_match = f"-A PREROUTING -s {ip} -p tcp --dport 1:65535 -j REDIRECT --to-port {portspoof_port}"
 
-    print(f"[-] Spoofing removed for IP: {ip}")
+    # Check if the rule exists and delete it
+    result = subprocess.run("iptables -t nat -S PREROUTING", shell=True, stdout=subprocess.PIPE)
+    rules = result.stdout.decode().splitlines()
+
+    for rule in rules:
+        if rule_match in rule:
+            delete_cmd = rule.replace("-A", "-D")
+            subprocess.run(f"iptables -t nat {delete_cmd}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print(f"[-] Removed spoofing rule for {ip}")
+            break
+    else:
+        print(f"[!] No spoofing rule found for {ip}")
+
+    subprocess.run(
+        f"iptables -D INPUT -p tcp --dport {portspoof_port} -j ACCEPT",
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
