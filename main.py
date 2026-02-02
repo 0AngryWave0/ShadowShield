@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.table import Table
 from core.monitor import read_eve, process_alerts, monitor_loop
 from core.state import blocked_ips
-from core.blocker import ensure_iptables_rule, unblock_ip, restore_blocked_ips
+from core.blocker import unblock_ip, restore_blocked_ips
 from tui.cowrie_logs import CowrieLogViewer
 from core.services import (
     start_suricata,
@@ -94,7 +94,6 @@ def main():
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("monitor", help="Run Suricata monitor loop")
-    subparsers.add_parser("dashboard", help="Run terminal dashboard")
     subparsers.add_parser("show-alerts", help="Show latest Suricata alerts")
     subparsers.add_parser("blocked", help="Show blocked IPs")
 
@@ -124,11 +123,8 @@ def main():
             print("⚠️  You need to run this as root (sudo) to block IPs.")
             exit(1)
         setup_ipset()
-        ensure_iptables_rule()
         restore_blocked_ips()
         monitor_loop()
-    elif args.command == "dashboard":
-        launch_dashboard()
     elif args.command == "show-alerts":
         show_alerts()
     elif args.command == "blocked":

@@ -1,72 +1,69 @@
 import subprocess
 import os
-from core.config import COWRIE_ENV, COWRIE_CMD, USER
+from core.config import COWRIE_ENV, COWRIE_CMD
+
 def run_cmd(cmd):
     result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return result.returncode, result.stdout.decode().strip(), result.stderr.decode().strip()
 
 # --------------------------
-# Suricata Service
+# Suricata
 # --------------------------
 def start_suricata():
-    return run_cmd("sudo systemctl start suricata")
+    return run_cmd("suricata -c /etc/suricata/suricata.yaml -i eth0 -D")
 
 def stop_suricata():
-    return run_cmd("sudo systemctl stop suricata")
+    return run_cmd("pkill -f 'suricata.*yaml'")
 
 def is_suricata_running():
-    _, out, _ = run_cmd("systemctl is-active suricata")
-    return out.strip() == "active"
+    code, out, _ = run_cmd("pidof suricata")
+    return code == 0 and bool(out.strip())
+
 
 # --------------------------
-# Portspoof Service
+# Portspoof
 # --------------------------
 def start_portspoof():
-    return run_cmd("sudo systemctl start portspoof")
+    return run_cmd("portspoof -c /opt/portspoof/portspoof.conf -s /opt/portspoof/services -p 4444")
 
 def stop_portspoof():
-    return run_cmd("sudo systemctl stop portspoof")
+    return run_cmd("pkill portspoof")
 
 def is_portspoof_running():
-    _, out, _ = run_cmd("systemctl is-active portspoof")
-    return out.strip() == "active"
+    code, _, _ = run_cmd("pgrep portspoof")
+    return code == 0
 
 # --------------------------
 # DROP Rule (iptables)
 # --------------------------
 def enable_drop_rule():
-    return run_cmd("sudo iptables -C INPUT -m set --match-set blocked_ips src -j DROP || sudo iptables -I INPUT -m set --match-set blocked_ips src -j DROP")
+    return run_cmd("iptables -C INPUT -m set --match-set blocked_ips src -j DROP || iptables -I INPUT -m set --match-set blocked_ips src -j DROP")
 
 def disable_drop_rule():
-    return run_cmd("sudo iptables -D INPUT -m set --match-set blocked_ips src -j DROP")
+    return run_cmd("iptables -D INPUT -m set --match-set blocked_ips src -j DROP")
 
 def is_drop_rule_enabled():
-    code, out, _ = run_cmd("sudo iptables -L INPUT -n")
+    code, out, _ = run_cmd("iptables -L INPUT -n")
     return "match-set blocked_ips src" in out
 
 # --------------------------
-# Cowrie Honeypot Service
+# Cowrie Honeypot
 # --------------------------
-def cowrie_cmd(cmd):
-    full_cmd = f"source {COWRIE_ENV} && {COWRIE_CMD} {cmd}"
-    return run_cmd(f"bash -c '{full_cmd}'")
-
 def start_cowrie():
     return subprocess.run([
-        "sudo", "-u", USER, "bash", "-c",
+        "bash", "-c",
         f"source {COWRIE_ENV} && {COWRIE_CMD} start"
     ])
 
 def stop_cowrie():
     return subprocess.run([
-        "sudo", "-u", USER, "bash", "-c",
+        "bash", "-c",
         f"source {COWRIE_ENV} && {COWRIE_CMD} stop"
     ])
 
-
 def is_cowrie_running():
     result = subprocess.run([
-        "sudo", "-u", USER, "bash", "-c",
+        "bash", "-c",
         f"source {COWRIE_ENV} && {COWRIE_CMD} status"
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
